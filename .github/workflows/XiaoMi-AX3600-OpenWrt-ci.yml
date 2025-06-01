@@ -61,7 +61,7 @@ jobs:
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
-      - name: Costom configure file
+      - name: 自定义配置文件Costom configure file
         run: |
           rm -f ./.config*
           touch ./.config
