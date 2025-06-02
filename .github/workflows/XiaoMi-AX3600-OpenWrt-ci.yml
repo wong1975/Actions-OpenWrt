@@ -104,9 +104,17 @@ jobs:
         rm -rf packages
         echo "::set-env name=FIRMWARE::$(pwd)"
 
+    - name: "上传编译结果"
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: OpenWrt_bin
+        path: openwrt/bin
+
     - name: "上传固件"
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: OpenWrt_firmware
         path: ${{ env.FIRMWARE }}
+
