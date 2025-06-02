@@ -53,11 +53,16 @@ jobs:
         REPO_BRANCH: main
       run: git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
 
+    - name: "检查 OpenWrt 目录是否存在"
+      run: |
+        ls -l
+        cd $GITHUB_WORKSPACE/openwrt || exit 1
+
     - name: "下载软件更新"
-      run: cd openwrt && ./scripts/feeds update -a
+      run: cd $GITHUB_WORKSPACE/openwrt && ./scripts/feeds update -a
 
     - name: "安装软件更新"
-      run: cd openwrt && ./scripts/feeds install -a
+      run: cd $GITHUB_WORKSPACE/openwrt && ./scripts/feeds install -a
 
     - name: "加载自定义配置"
       env:
@@ -67,27 +72,27 @@ jobs:
         [ -e files ] && mv files openwrt/files
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
         chmod +x $DIY_SH
-        cd openwrt
+        cd $GITHUB_WORKSPACE/openwrt
         ../$DIY_SH
         make defconfig
 
     - name: "下载包"
       run: |
-        cd openwrt
+        cd $GITHUB_WORKSPACE/openwrt
         make download -j$(nproc)
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
 
     - name: "多线程编译"
       run: |
-        cd openwrt
+        cd $GITHUB_WORKSPACE/openwrt
         echo -e "$(nproc) threads for compilation..."
         make -j$(nproc)
 
     - name: "失败时使用单线程编译"
       if: failure()
       run: |
-        cd openwrt
+        cd $GITHUB_WORKSPACE/openwrt
         make -j1 V=s
 
     - name: "上传编译结果"
