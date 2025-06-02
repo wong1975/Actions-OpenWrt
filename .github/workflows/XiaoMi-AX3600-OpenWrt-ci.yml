@@ -103,9 +103,15 @@ jobs:
     - name: "整理固件文件"
       if: always()
       run: |
-        cd openwrt/bin/targets/*/*
-        rm -rf packages
-        echo "::set-env name=FIRMWARE::$(pwd)"
+        TARGET_DIR=$(find openwrt/bin/targets -mindepth 2 -maxdepth 2 -type d | head -n 1)
+        if [ -d "$TARGET_DIR" ]; then
+          cd "$TARGET_DIR"
+          rm -rf packages
+          echo "FIRMWARE=$TARGET_DIR" >> $GITHUB_ENV
+        else
+          echo "Error: No target directory found!" >&2
+          exit 1
+        fi
 
     - name: "上传编译结果"
       uses: actions/upload-artifact@v4
