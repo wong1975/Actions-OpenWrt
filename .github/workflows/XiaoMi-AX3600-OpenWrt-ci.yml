@@ -42,8 +42,8 @@ jobs:
         sudo -E apt-get -qq clean
         sudo apt-get autoremove --purge
         sudo apt-get clean
-        curl -fsSL https://raw.githubusercontent.com/LEDE-Actions/dotfiles/master/.bashrc >> ~/.bashrc
-        sudo ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+        #curl -fsSL https://raw.githubusercontent.com/LEDE-Actions/dotfiles/master/.bashrc >> ~/.bashrc
+        #sudo ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 
     - name: "克隆 OpenWrt 官方源代码"
       env: 
@@ -92,13 +92,6 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE/openwrt
         make -j1 V=s
-
-    - name: "上传编译结果"
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: OpenWrt_bin
-        path: openwrt/bin
 
     - name: "整理固件文件"
       if: always()
