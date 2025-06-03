@@ -28,63 +28,62 @@ jobs:
     steps:
     - name: "获取源码"
       uses: actions/checkout@v3
+      
+    - name: "初始化环境"
+      env:
+        DEBIAN_FRONTEND: noninteractive
+        LANG: en_US.UTF-8
+      run: |
+        echo "Cleaning up..."
+        docker rmi $(docker images -q) || true
+        sudo rm -rf /usr/share/dotnet /etc/mysql /etc/php /etc/apt/sources.list.d/*
+        sudo swapoff /swapfile && sudo rm -f /swapfile
+        sudo -E apt-get -qq update
+        sudo -E apt-get install -y \
+            ack antlr3 aria2 asciidoc autoconf automake autopoint binutils bison \
+            build-essential bzip2 ccache cmake cpio curl device-tree-compiler \
+            fastjar flex gawk gettext gcc-multilib g++-multilib git gperf haveged \
+            help2man intltool libc6-dev-i386 libelf-dev libglib2.0-dev libgmp3-dev \
+            libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev \
+            libreadline-dev libssl-dev libtool lrzsz mkisofs msmtp nano ninja-build \
+            p7zip p7zip-full patch pkgconf python2.7 python3 python3-pip libpython3-dev \
+            qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs \
+            upx-ucl unzip vim wget xmlto xxd zlib1g-dev
+        sudo -E apt-get -qq autoremove --purge
+        sudo -E apt-get -qq clean
 
-        - name: "初始化环境"
-          env:
-            DEBIAN_FRONTEND: noninteractive
-            LANG: en_US.UTF-8
-          run: |
-            echo "Cleaning up..."
-            docker rmi $(docker images -q) || true
-            sudo rm -rf /usr/share/dotnet /etc/mysql /etc/php /etc/apt/sources.list.d/*
-            sudo swapoff /swapfile && sudo rm -f /swapfile
-            sudo -E apt-get -qq update
-            sudo -E apt-get install -y \
-                ack antlr3 aria2 asciidoc autoconf automake autopoint binutils bison \
-                build-essential bzip2 ccache cmake cpio curl device-tree-compiler \
-                fastjar flex gawk gettext gcc-multilib g++-multilib git gperf haveged \
-                help2man intltool libc6-dev-i386 libelf-dev libglib2.0-dev libgmp3-dev \
-                libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev \
-                libreadline-dev libssl-dev libtool lrzsz mkisofs msmtp nano ninja-build \
-                p7zip p7zip-full patch pkgconf python2.7 python3 python3-pip libpython3-dev \
-                qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs \
-                upx-ucl unzip vim wget xmlto xxd zlib1g-dev
-            sudo -E apt-get -qq autoremove --purge
-            sudo -E apt-get -qq clean
+    - name: "克隆 OpenWrt 官方源代码"
+      env: 
+        REPO_URL: https://git.openwrt.org/openwrt/openwrt.git
+        REPO_BRANCH: main
+      run: git clone --depth=1 $REPO_URL -b $REPO_BRANCH openwrt
 
-        - name: "克隆 OpenWrt 官方源代码"
-          env: 
-            REPO_URL: https://git.openwrt.org/openwrt/openwrt.git
-            REPO_BRANCH: main
-          run: git clone --depth=1 $REPO_URL -b $REPO_BRANCH openwrt
+    - name: "检查 OpenWrt 目录是否存在"
+      run: |
+        ls -l
+        cd $GITHUB_WORKSPACE/openwrt || exit 1
 
-        - name: "检查 OpenWrt 目录是否存在"
-          run: |
-            ls -l
-            cd $GITHUB_WORKSPACE/openwrt || exit 1
+    - name: "下载软件更新"
+      run: cd $GITHUB_WORKSPACE/openwrt && ./scripts/feeds update -a
 
-        - name: "下载软件更新"
-          run: cd $GITHUB_WORKSPACE/openwrt && ./scripts/feeds update -a
+    - name: "安装软件更新"
+      run: cd $GITHUB_WORKSPACE/openwrt && ./scripts/feeds install -a
 
-        - name: "安装软件更新"
-          run: cd $GITHUB_WORKSPACE/openwrt && ./scripts/feeds install -a
+    - name: "安装 Python 依赖"
+      run: |
+        pip install netifaces setuptools wheel
 
-        - name: "安装 Python 依赖"
-          run: |
-            pip install netifaces setuptools wheel
-
-        - name: "加载自定义配置"
-          env:
-            CONFIG_FILE: '.config'
-          run: |
-            [ -e files ] && mv files openwrt/files
-            [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
-            #chmod +x $DIY_SH
-            cd $GITHUB_WORKSPACE/openwrt
-            #../$DIY_SH
-            make defconfig || { echo "make defconfig 失败"; exit 1; }
-            cat .config | grep CONFIG_TARGET
-
+    - name: "加载自定义配置"
+      env:
+        CONFIG_FILE: '.config'
+      run: |
+        [ -e files ] && mv files openwrt/files
+        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
+        #chmod +x $DIY_SH
+        cd $GITHUB_WORKSPACE/openwrt
+        #../$DIY_SH
+        make defconfig || { echo "make defconfig 失败"; exit 1; }
+        cat .config | grep CONFIG_TARGET
 
     - name: "下载包"
       run: |
