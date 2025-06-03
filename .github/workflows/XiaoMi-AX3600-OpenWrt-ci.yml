@@ -71,7 +71,9 @@ jobs:
 
     - name: "安装 Python 依赖"
       run: |
-        pip install netifaces setuptools wheel
+        cd $GITHUB_WORKSPACE/openwrt
+        ./scripts/feeds update -a
+        ./scripts/feeds install python3-netifaces
 
     - name: "加载自定义配置"
       env:
