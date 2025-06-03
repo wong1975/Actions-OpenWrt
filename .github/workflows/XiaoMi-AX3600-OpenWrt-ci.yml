@@ -68,12 +68,16 @@ jobs:
 
     - name: "安装软件更新"
       run: cd $GITHUB_WORKSPACE/openwrt && ./scripts/feeds install -a
-
-    - name: "安装 Python 依赖"
+  
+    - name: "修改 Rust Makefile 配置"
       run: |
-        cd $GITHUB_WORKSPACE/openwrt
-        ./scripts/feeds update -a
-        ./scripts/feeds install python3-netifaces
+        sed -i 's/--set=llvm\.download-ci-llvm=true/--set=llvm.download-ci-llvm=false/' feeds/packages/lang/rust/Makefile
+
+    #- name: "安装 Python 依赖"
+    #  run: |
+    #    cd $GITHUB_WORKSPACE/openwrt
+    #    ./scripts/feeds update -a
+    #    ./scripts/feeds install python3-netifaces
 
     - name: "加载自定义配置"
       env:
