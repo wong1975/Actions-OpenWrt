@@ -65,10 +65,16 @@ jobs:
         cd $GITHUB_WORKSPACE/openwrt || exit 1
 
     - name: "下载软件更新"
-      run: cd $GITHUB_WORKSPACE/openwrt && ./scripts/feeds update -a
+      run: |
+        cd $GITHUB_WORKSPACE/openwrt
+        ./scripts/feeds update -a
+        ./scripts/feeds update mos
 
     - name: "安装软件更新"
-      run: cd $GITHUB_WORKSPACE/openwrt && ./scripts/feeds install -a
+      run: |
+        cd $GITHUB_WORKSPACE/openwrt
+        ./scripts/feeds install -a
+        ./scripts/feeds install -a -p mos
   
     #- name: "修改 Rust Makefile 配置"
     #  run: |
