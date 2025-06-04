@@ -54,7 +54,7 @@ jobs:
 
     - name: "克隆 OpenWrt 官方源代码"
       env: 
-        REPO_URL: https://git.openwrt.org/openwrt/openwrt.git
+        REPO_URL: https://github.com/wong1975/My_OpenWrt.git
         REPO_BRANCH: main
       run: git clone --depth=1 $REPO_URL -b $REPO_BRANCH openwrt
 
