@@ -31,6 +31,13 @@ on:
     paths:
       - '.config'
   workflow_dispatch:
+    inputs:
+      manual_config:
+        description: "Manually generate XiaoMi-AX3600 config via SSH (y/n)"
+        default: "y"
+        required: true
+
+
 
 jobs:
   check_commits:
@@ -125,7 +132,12 @@ jobs:
           sed -i 's/--set=llvm\.download-ci-llvm=true/--set=llvm.download-ci-llvm=false/' feeds/packages/lang/rust/Makefile
           make defconfig V=s || { echo "make defconfig 失败"; exit 1; }
           grep CONFIG_TARGET .config
-
+          
+      # SSH 远程调试（tmate），自动进入 make menuconfig
+      - name: SSH 远程调试（tmate）进入 menuconfig
+        if: ${{ github.event.inputs.manual_config == 'y' }}
+        uses: mxschmitt/action-tmate@v3
+        
       - name: "下载包"
         run: |
           cd $GITHUB_WORKSPACE/openwrt
