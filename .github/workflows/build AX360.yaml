@@ -90,7 +90,8 @@ jobs:
       - name: Setup configuration and custom files
         run: |
           mv builder_repo/${{ env.CONFIG_FILE }} .config
-          make defconfig -j$(nproc)
+          make defconfig V=s -j$(nproc)
+          #make oldconfig 以保持已有设置
           mkdir -p ${{ env.CUSTOM_FILES_PATH }}
           [ -d "builder_repo/${{ env.CUSTOM_FILES_PATH }}" ] && mv builder_repo/${{ env.CUSTOM_FILES_PATH }}* ${{ env.CUSTOM_FILES_PATH }} || true
 
