@@ -1,4 +1,4 @@
-name: Build OpenWrt for specific target and release
+name: Build AX360
 
 permissions:
   contents: write
