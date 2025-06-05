@@ -7,13 +7,13 @@ permissions:
 on:
   workflow_dispatch:
   push:
-  schedule:
-    - cron: "0 */2 * * *"
+  #schedule:
+  #  - cron: "0 */2 * * *"
 
 env:
   REMOTE_REPOSITORY: qosmio/openwrt-ipq
   REMOTE_BRANCH: main-nss
-  CONFIG_FILE: ax3600.config
+  CONFIG_FILE: xiaomi_ax3600.config
   CUSTOM_FILES_PATH: files/
   RELEASE_PREFIX: main-nss
   NSS_PACKAGES_REPOSITORY: qosmio/nss-packages
