@@ -12,7 +12,7 @@ on:
 
 env:
   REMOTE_REPOSITORY: wong1975/My_OpenWrt #OpenWrt 代码仓库的路径
-  REMOTE_BRANCH: main-nss #OpenWrt 仓库的分支
+  REMOTE_BRANCH: main #OpenWrt 仓库的分支
   CONFIG_FILE: xiaomi_ax3600.config
   CUSTOM_FILES_PATH: files/
   RELEASE_PREFIX: main-nss #OpenWrt 仓库的分支
