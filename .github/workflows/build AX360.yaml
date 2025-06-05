@@ -83,22 +83,54 @@ jobs:
         run: ./scripts/feeds update -a && ./scripts/feeds install -a
 
       # SSH 远程调试（tmate），自动进入 make menuconfig
-      - name: SSH 远程调试（tmate）进入 menuconfig
+      - name: SSH 远程调试（tmate）进入 make menuconfig
         if: ${{ github.event.inputs.manual_config == 'y' }}
         uses: mxschmitt/action-tmate@v3
 
       - name: Setup configuration and custom files
         run: |
           mv builder_repo/${{ env.CONFIG_FILE }} .config
-          make defconfig V=s -j$(nproc)
-          #make oldconfig 以保持已有设置
+          if [ "${{ github.event.inputs.manual_config }}" == "y" ]; then
+            make oldconfig V=s -j$(nproc)  # 保持已有设置
+          else
+            make defconfig V=s -j$(nproc)  # 生成默认设置
+          fi
           mkdir -p ${{ env.CUSTOM_FILES_PATH }}
-          [ -d "builder_repo/${{ env.CUSTOM_FILES_PATH }}" ] && mv builder_repo/${{ env.CUSTOM_FILES_PATH }}* ${{ env.CUSTOM_FILES_PATH }} || true
+          if [ -d "builder_repo/${{ env.CUSTOM_FILES_PATH }}" ]; then
+            mv builder_repo/${{ env.CUSTOM_FILES_PATH }}/* ${{ env.CUSTOM_FILES_PATH }}
+          else
+            echo "Custom files path not found, skipping."
+          fi
+
+      - name: Find and verify .config file
+        run: |
+          if [ -f ".config" ]; then
+            cp .config found.config
+          elif [ -f "source/.config" ]; then
+            cp source/.config found.config
+          else
+            echo "No .config found, using default settings."
+          fi
+          ls -l found.config || echo "No valid .config detected"
+
+      - name: Upload `.config` file
+        uses: actions/upload-artifact@v4
+        with:
+          name: config
+          path: |
+            found.config
+            source/.config
+            .config
 
       - name: Build firmware
         run: |
           make download -j$(nproc) V=s
-          make -j$(nproc) || make -j1 V=s  # Retry single-threaded on failure
+          if make -j$(nproc); then
+            echo "Build completed successfully!"
+          else
+            echo "Retrying single-threaded build..."
+            make -j1 V=s
+          fi
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
