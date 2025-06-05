@@ -77,6 +77,11 @@ jobs:
       - name: Update and install feeds
         run: ./scripts/feeds update -a && ./scripts/feeds install -a
 
+      # SSH 远程调试（tmate），自动进入 make menuconfig
+      - name: SSH 远程调试（tmate）进入 menuconfig
+        if: ${{ github.event.inputs.manual_config == 'y' }}
+        uses: mxschmitt/action-tmate@v3
+
       - name: Setup configuration and custom files
         run: |
           mv builder_repo/${{ env.CONFIG_FILE }} .config
