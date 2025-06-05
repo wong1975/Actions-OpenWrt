@@ -6,6 +6,11 @@ permissions:
 
 on:
   workflow_dispatch:
+    inputs:
+      manual_config:
+        description: "Manually generate XiaoMi-AX3600 config via SSH (y/n)"
+        default: "y"
+        required: true
   push:
   #schedule:
   #  - cron: "0 */2 * * *"
