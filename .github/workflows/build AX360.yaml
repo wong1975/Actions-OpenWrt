@@ -11,14 +11,14 @@ on:
         description: "Manually generate XiaoMi-AX3600 config via SSH (y/n)"
         default: "y"
         required: true
-  push:
+  #push:
   #schedule:
   #  - cron: "0 */2 * * *"
 
 env:
   REMOTE_REPOSITORY: wong1975/My_OpenWrt #OpenWrt 代码仓库的路径
   REMOTE_BRANCH: main #OpenWrt 仓库的分支
-  CONFIG_FILE: xiaomi_ax3600.config
+  CONFIG_FILE: .config
   CUSTOM_FILES_PATH: files/
   RELEASE_PREFIX: main-nss #OpenWrt 仓库的分支
   NSS_PACKAGES_REPOSITORY: qosmio/nss-packages #NSS 相关的额外软件包仓库路径
