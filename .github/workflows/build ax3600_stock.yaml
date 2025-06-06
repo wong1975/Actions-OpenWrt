@@ -1,4 +1,4 @@
-name: Build OpenWrt for specific target and release
+name: Build ax3600_stock_xiaomi_ax3600config.yaml
 
 permissions:
   contents: write
