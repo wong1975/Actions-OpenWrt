@@ -6,14 +6,14 @@ permissions:
 
 on:
   workflow_dispatch:
-  push:
-  schedule:
-    - cron: "0 */2 * * *"
+  #push:
+  #schedule:
+  #  - cron: "0 */2 * * *"
 
 env:
-  REMOTE_REPOSITORY: qosmio/openwrt-ipq
-  REMOTE_BRANCH: main-nss
-  CONFIG_FILE: ax3600.config
+  REMOTE_REPOSITORY: wong1975/My_OpenWrt
+  REMOTE_BRANCH: main
+  CONFIG_FILE: .config
   CUSTOM_FILES_PATH: files/
   RELEASE_PREFIX: main-nss
   NSS_PACKAGES_REPOSITORY: qosmio/nss-packages
@@ -80,9 +80,29 @@ jobs:
       - name: Setup configuration and custom files
         run: |
           mv builder_repo/${{ env.CONFIG_FILE }} .config
-          make defconfig -j$(nproc)
+          make defconfig V=s -j$(nproc)
           mkdir -p ${{ env.CUSTOM_FILES_PATH }}
           [ -d "builder_repo/${{ env.CUSTOM_FILES_PATH }}" ] && mv builder_repo/${{ env.CUSTOM_FILES_PATH }}* ${{ env.CUSTOM_FILES_PATH }} || true
+
+      - name: 查找并验证Find and verify .config file
+        run: |
+          if [ -f ".config" ]; then
+            cp .config found.config
+          elif [ -f "source/.config" ]; then
+            cp source/.config found.config
+          else
+            echo "未找到 .config 文件，使用默认设置 No .config found, using default settings."
+          fi
+          ls -l found.config || echo "未检测到有效的 .config 文件 No valid .config detected"
+
+      - name: 上传 `.config` 文件 Upload `.config` file
+        uses: actions/upload-artifact@v4
+        with:
+          name: config
+          path: |
+            found.config
+            source/.config
+            .config
 
       - name: Build firmware
         run: |
