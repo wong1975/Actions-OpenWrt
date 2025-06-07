@@ -1,5 +1,5 @@
-name： AX3600 my_OpenWrt
 
+name: AX360 my_OpenWrt
 permissions:
   contents: write
   actions: write
