@@ -1,3 +1,24 @@
+Skip to content
+Navigation Menu
+wong1975
+Actions-OpenWrt
+
+Type / to search
+Code
+Issues
+Pull requests
+Actions
+Projects
+Wiki
+Security
+Insights
+Settings
+OpenWrt官方源编译XiaoMi-AX3600
+OpenWrt官方源编译XiaoMi-AX3600 #27
+Jobs
+Run details
+Workflow file for this run
+.github/workflows/XiaoMi-AX3600-OpenWrt-ci.yml at 7d23528
 #
 # This is free software, lisence use MIT.
 # 
@@ -130,3 +151,5 @@ jobs:
       with:
         name: OpenWrt_firmware
         path: ${{ env.FIRMWARE }}
+
+Update XiaoMi-AX3600-OpenWrt-ci.yml · wong1975/Actions-OpenWrt@7d23528
