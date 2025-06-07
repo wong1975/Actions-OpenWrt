@@ -1,4 +1,5 @@
-name: Build AX360
+
+name: Build OpenWrt for specific target and release
 
 permissions:
   contents: write
@@ -6,19 +7,14 @@ permissions:
 
 on:
   workflow_dispatch:
-    inputs:
-      manual_config:
-        description: "Manually generate XiaoMi-AX3600 config via SSH (y/n)"
-        default: "y"
-        required: true
-  #push:
+  push:
   #schedule:
   #  - cron: "0 */2 * * *"
 
 env:
   REMOTE_REPOSITORY: wong1975/My_OpenWrt #OpenWrt 代码仓库的路径
   REMOTE_BRANCH: main #OpenWrt 仓库的分支
-  CONFIG_FILE: .config
+  CONFIG_FILE: '.config'
   CUSTOM_FILES_PATH: files/
   RELEASE_PREFIX: main-nss #OpenWrt 仓库的分支
   NSS_PACKAGES_REPOSITORY: qosmio/nss-packages #NSS 相关的额外软件包仓库路径
@@ -42,15 +38,12 @@ jobs:
           latest_sha=$(gh api "repos/${{ env.REMOTE_REPOSITORY }}/commits/${{ env.REMOTE_BRANCH }}" --jq .sha)
           packages_sha=$(gh api "repos/${{ env.NSS_PACKAGES_REPOSITORY }}/commits/${{ env.NSS_PACKAGES_REPOSITORY_BRANCH }}" --jq .sha)
           release_body=$(gh api "repos/${{ github.repository }}/releases/latest" --jq .body 2>/dev/null || echo "")
-
           new_commits=$([[ "$release_body" == *"$latest_sha"* ]] && echo "false" || echo "true")
           nss_new_commits=$([[ "$release_body" == *"$packages_sha"* ]] && echo "false" || echo "true")
-
           echo "new_commits=$new_commits" >> "$GITHUB_OUTPUT"
           echo "latest_commit_sha=$latest_sha" >> "$GITHUB_OUTPUT"
           echo "nss_packages_repo_new_commits=$nss_new_commits" >> "$GITHUB_OUTPUT"
           echo "nss_packages_repo_latest_commit_sha=$packages_sha" >> "$GITHUB_OUTPUT"
-
   build:
     name: Build OpenWrt
     needs: check_commits
@@ -78,60 +71,19 @@ jobs:
               [ -f "$patch" ] && git apply --verbose "$patch"
             done
           fi
-
       - name: Update and install feeds
         run: ./scripts/feeds update -a && ./scripts/feeds install -a
-
-      # SSH 远程调试（tmate），自动进入 make menuconfig
-      - name: SSH 远程调试（tmate）进入 make menuconfig
-        if: ${{ github.event.inputs.manual_config == 'y' }}
-        uses: mxschmitt/action-tmate@v3
 
       - name: Setup configuration and custom files
         run: |
           mv builder_repo/${{ env.CONFIG_FILE }} .config
-          if [ "${{ github.event.inputs.manual_config }}" == "y" ]; then
-            make oldconfig V=s -j$(nproc)  # 保持已有设置
-          else
-            make defconfig V=s -j$(nproc)  # 生成默认设置
-          fi
+          make defconfig -j$(nproc)
           mkdir -p ${{ env.CUSTOM_FILES_PATH }}
-          if [ -d "builder_repo/${{ env.CUSTOM_FILES_PATH }}" ]; then
-            mv builder_repo/${{ env.CUSTOM_FILES_PATH }}/* ${{ env.CUSTOM_FILES_PATH }}
-          else
-            echo "Custom files path not found, skipping."
-          fi
-
-      - name: Find and verify .config file
-        run: |
-          if [ -f ".config" ]; then
-            cp .config found.config
-          elif [ -f "source/.config" ]; then
-            cp source/.config found.config
-          else
-            echo "No .config found, using default settings."
-          fi
-          ls -l found.config || echo "No valid .config detected"
-
-      - name: Upload `.config` file
-        uses: actions/upload-artifact@v4
-        with:
-          name: config
-          path: |
-            found.config
-            source/.config
-            .config
-
+          [ -d "builder_repo/${{ env.CUSTOM_FILES_PATH }}" ] && mv builder_repo/${{ env.CUSTOM_FILES_PATH }}* ${{ env.CUSTOM_FILES_PATH }} || true
       - name: Build firmware
         run: |
           make download -j$(nproc) V=s
-          if make -j$(nproc); then
-            echo "Build completed successfully!"
-          else
-            echo "Retrying single-threaded build..."
-            make -j1 V=s
-          fi
-
+          make -j$(nproc) || make -j1 V=s  # Retry single-threaded on failure
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -159,29 +111,23 @@ jobs:
           name: 🚀 OpenWrt Build Release ${{ env.RELEASE_DATE }}
           body: |
             ## 📦 OpenWrt Automated Build Release
-
             **Build Date:** ${{ env.RELEASE_DATE }}
-
             ### 🔄 Main Repository
             **Repository:** [${{ env.REMOTE_REPOSITORY }}](https://github.com/${{ env.REMOTE_REPOSITORY }})
             **Branch:** `${{ env.REMOTE_BRANCH }}`
             **Commit:** `${{ needs.check_commits.outputs.latest_commit_sha }}`
-
             ### 📦 NSS Packages
             **Repository:** [${{ env.NSS_PACKAGES_REPOSITORY }}](https://github.com/${{ env.NSS_PACKAGES_REPOSITORY }})
             **Branch:** `${{ env.NSS_PACKAGES_REPOSITORY_BRANCH }}`
             **Commit:** `${{ needs.check_commits.outputs.nss_packages_repo_latest_commit_sha }}`
-
             ### 📝 Build Information
             - **Target:** [Xiaomi Mi AIoT Router AX3600](https://openwrt.org/toh/xiaomi/ax3600)
             - **Configuration:** [`${{ env.CONFIG_FILE }}`](${{ env.CONFIG_FILE }})
-
             ### 📋 Notes
             - Automated build triggered by ${{ github.event_name }}
             - Previous releases are automatically cleaned up (keeping latest 2)
             ---
             _Generated by GitHub Actions 🤖_
-
       - name: Clean up old releases
         env:
           GH_TOKEN: ${{ github.token }}
