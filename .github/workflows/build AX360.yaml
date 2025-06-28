@@ -1,5 +1,5 @@
 
-name: Build OpenWrt for specific target and release
+name: Build OpenWrt for AX3600
 
 permissions:
   contents: write
